@@ -316,9 +316,6 @@
                     <target name="-history-loop">
                             <echo message="Пробуем скомпилировать текущую версию..."/>
                     
-                            <local name="compile.result"/>
-                            <local name="compile.success"/>
-                    
                             <exec executable="ant" resultproperty="compile.result" failonerror="false">
                                 <arg value="-logger"/>
                                 <arg value="org.apache.tools.ant.listener.AnsiColorLogger"/>
@@ -332,23 +329,23 @@
                             <antcall target="-history-success"/>
                             <antcall target="-history-fail"/>
                         </target>
-                
-                    <target name="-history-success" if="compile.success">
-                        <echo message="Успех! Код скомпилировался. Мы нашли рабочую версию программы."/>
-                    </target>
-                
-                    <target name="-history-fail" unless="compile.success">
-                        <echo message="❌ Ошибка компиляции. Выполняем жесткий откат (git reset --hard HEAD~1)..."/>
-                
-                        <exec executable="git" failonerror="true">
-                            <arg value="reset"/>
-                            <arg value="--hard"/>
-                            <arg value="HEAD~1"/>
-                        </exec>
-                
-                        <echo message="Состояние откачено. Идем на следующий круг рекурсии..."/>
-                        
-                        <antcall target="-history-loop"/>
-                    </target>
+                    
+                        <target name="-history-success" if="compile.success">
+                            <echo message="Успех! Код скомпилировался. Мы нашли рабочую версию программы."/>
+                        </target>
+                    
+                        <target name="-history-fail" unless="compile.success">
+                            <echo message="❌ Ошибка компиляции. Выполняем жесткий откат (git reset --hard HEAD~1)..."/>
+                    
+                            <exec executable="git" failonerror="true">
+                                <arg value="reset"/>
+                                <arg value="--hard"/>
+                                <arg value="HEAD~1"/>
+                            </exec>
+                    
+                            <echo message="Состояние откачено. Идем на следующий круг рекурсии..."/>
+                            
+                            <antcall target="-history-loop" inheritall="false"/>
+                        </target>
 
 </project>
