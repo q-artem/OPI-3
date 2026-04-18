@@ -24,6 +24,11 @@ public class AreaBean implements Serializable {
     public AreaBean() {
         this.resultManager = new ResultManager();
     }
+    
+    // Конструктор для unit-тестов: позволяет передать stub вместо реального ResultManager.
+    AreaBean(ResultManager resultManager) {
+        this.resultManager = resultManager;
+    }
 
     public boolean checkHit(double r) {
         return (x <= 0 && y >= 0 && x + r >= y)

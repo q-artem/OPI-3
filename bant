@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Обертка Beautiful Ant (bant)
+
+ant -logger org.apache.tools.ant.listener.AnsiColorLogger "$@"

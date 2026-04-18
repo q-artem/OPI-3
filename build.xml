@@ -16,18 +16,33 @@
         <echo message="Очистка завершена." />
     </target>
 
-    <target name="compile" description="Компиляция исходных кодов проекта">
-        <mkdir dir="${classes.dir}" />
-        <javac
+    <target name="init-libs" description="Загрузка зависимостей через Gradle">
+            <echo message="Вызов Gradle для скачивания библиотек..."/>
+            
+            <exec executable="gradle" failonerror="true">
+                <arg value="copyLibs"/>
+                <arg value="--console=rich"/>
+            </exec>
+            
+            <echo message="Библиотеки успешно загружены в папку lib/"/>
+        </target>
+
+    <target
+        name="compile"
+        depends="init-libs"
+        description="Компиляция исходных кодов проекта"
+    >
+            <mkdir dir="${classes.dir}" />
+            <javac
             srcdir="${src.dir}"
             destdir="${classes.dir}"
             includeantruntime="false"
             encoding="UTF-8"
-            classpathref="classpath"
         >
-        </javac>
-        <echo message="Компиляция успешно завершена." />
-    </target>
+                <classpath refid="classpath" />
+            </javac>
+            <echo message="Компиляция успешно завершена." />
+        </target>
 
     <target
         name="build"
@@ -45,8 +60,39 @@
     </target>
 
     <target name="test" depends="build" description="Запуск junit-тестов">
-        <echo message="Здесь будет таск 'junit' для запуска тестов..." />
-    </target>
+            <echo message="Компиляция и запуск тестов..." />
+
+            <mkdir dir="${test.classes.dir}" />
+            <mkdir dir="${build.dir}/reports" /> <javac
+            srcdir="${test.dir}"
+            destdir="${test.classes.dir}"
+            includeantruntime="false"
+            encoding="UTF-8"
+        >
+                <classpath>
+                    <path refid="classpath" />
+                    <pathelement location="${classes.dir}" />
+                </classpath>
+             </javac>
+
+            <junit printsummary="yes" haltonfailure="true">
+                <classpath>
+                    <path refid="classpath" />
+                    <pathelement location="${classes.dir}" />
+                    <pathelement location="${test.classes.dir}" />
+                </classpath>
+
+                <formatter type="xml" />
+
+                <batchtest fork="yes" todir="${build.dir}/reports">
+                    <fileset dir="${test.classes.dir}">
+                        <include name="**/*Test.class" />
+                    </fileset>
+                </batchtest>
+            </junit>
+
+            <echo message="Все тесты пройдены успешно!" />
+        </target>
 
     <target name="xml" description="Валидация всех xml-файлов в проекте">
         <xmlvalidate failonerror="false" lenient="yes">
@@ -99,35 +145,45 @@
     </target>
 
     <target name="alt" description="Альтернативная версия программы (replace)">
-            <echo message="Запуск создания альтернативной версии..."/>
-    
-            <delete dir="${alt.build.dir}"/>
-            <mkdir dir="${alt.src.dir}"/>
-            <mkdir dir="${alt.classes.dir}"/>
-    
+            <echo message="Запуск создания альтернативной версии..." />
+
+            <delete dir="${alt.build.dir}" />
+            <mkdir dir="${alt.src.dir}" />
+            <mkdir dir="${alt.classes.dir}" />
+
             <copy todir="${alt.src.dir}">
-                <fileset dir="${src.dir}"/>
+                <fileset dir="${src.dir}" />
             </copy>
-    
+
             <replace dir="${alt.src.dir}" includes="**/*.java">
-                <replacefilter token="${alt.token.class.old}" value="${alt.token.class.new}"/>
-                <replacefilter token="${alt.token.var.old}" value="${alt.token.var.new}"/>
+                <replacefilter
+                token="${alt.token.class.old}"
+                value="${alt.token.class.new}"
+            />
+                <replacefilter
+                token="${alt.token.var.old}"
+                value="${alt.token.var.new}"
+            />
             </replace>
-    
-            <move file="${alt.src.dir}/lab/${alt.token.class.old}.java" 
-                  tofile="${alt.src.dir}/lab/${alt.token.class.new}.java" 
-                  failonerror="false"/>
-    
-            <echo message="Код успешно модифицирован. Вызываем цель build..."/>
-    
+
+            <move
+            file="${alt.src.dir}/lab/${alt.token.class.old}.java"
+            tofile="${alt.src.dir}/lab/${alt.token.class.new}.java"
+            failonerror="false"
+        />
+
+            <echo message="Код успешно модифицирован. Вызываем цель build..." />
+
             <antcall target="build">
-                <param name="src.dir" value="${alt.src.dir}"/>
-                <param name="classes.dir" value="${alt.classes.dir}"/>
-                <param name="build.dir" value="${alt.build.dir}"/>
-                <param name="jar.name" value="${alt.jar.name}"/>
+                <param name="src.dir" value="${alt.src.dir}" />
+                <param name="classes.dir" value="${alt.classes.dir}" />
+                <param name="build.dir" value="${alt.build.dir}" />
+                <param name="jar.name" value="${alt.jar.name}" />
             </antcall>
-    
-            <echo message="Альтернативная сборка завершена: ${alt.build.dir}/${alt.jar.name}"/>
+
+            <echo
+            message="Альтернативная сборка завершена: ${alt.build.dir}/${alt.jar.name}"
+        />
         </target>
 
     <target name="report" description="Отчет junit, добавление в git и commit">
