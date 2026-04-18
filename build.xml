@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="Lab3_Ant" default="build" basedir=".">
+<project name="OPI-3" default="build" basedir=".">
 
     <property file="build.properties" />
 
@@ -17,14 +17,14 @@
     </target>
 
     <target name="init-libs" description="Загрузка зависимостей через Gradle">
-            <echo message="Вызов Gradle для скачивания библиотек..."/>
-            
+            <echo message="Вызов Gradle для скачивания библиотек..." />
+
             <exec executable="gradle" failonerror="true">
-                <arg value="copyLibs"/>
-                <arg value="--console=rich"/>
+                <arg value="copyLibs" />
+                <arg value="--console=rich" />
             </exec>
-            
-            <echo message="Библиотеки успешно загружены в папку lib/"/>
+
+            <echo message="Библиотеки успешно загружены в папку lib/" />
         </target>
 
     <target
@@ -186,9 +186,31 @@
         />
         </target>
 
-    <target name="report" description="Отчет junit, добавление в git и commit">
-        <echo message="Здесь будет таск 'junitreport' и 'exec' для git..." />
-    </target>
+        <target
+        name="report"
+        depends="test"
+        description="Отчет junit, добавление в git и commit"
+    >
+                <echo
+            message="Сохранение отчетов и создание коммита в Git..."
+        />
+
+                <exec executable="git" failonerror="true">
+                    <arg value="add" />
+                    <arg value="-f" />
+                    <arg value="${build.dir}/reports/" />
+                </exec>
+
+                <exec executable="git" failonerror="false">
+                    <arg value="commit" />
+                    <arg value="-m" />
+                    <arg value="Auto-commit: JUnit XML reports [Ant Build]" />
+                </exec>
+
+                <echo
+            message="Шаг с отчетами завершен"
+        />
+            </target>
 
     <target name="diff" description="Проверка рабочей копии и svn commit">
         <echo
