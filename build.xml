@@ -99,10 +99,36 @@
     </target>
 
     <target name="alt" description="Альтернативная версия программы (replace)">
-        <echo
-            message="Здесь будет копирование в tmp, таск 'replace' и упаковка..."
-        />
-    </target>
+            <echo message="Запуск создания альтернативной версии..."/>
+    
+            <delete dir="${alt.build.dir}"/>
+            <mkdir dir="${alt.src.dir}"/>
+            <mkdir dir="${alt.classes.dir}"/>
+    
+            <copy todir="${alt.src.dir}">
+                <fileset dir="${src.dir}"/>
+            </copy>
+    
+            <replace dir="${alt.src.dir}" includes="**/*.java">
+                <replacefilter token="${alt.token.class.old}" value="${alt.token.class.new}"/>
+                <replacefilter token="${alt.token.var.old}" value="${alt.token.var.new}"/>
+            </replace>
+    
+            <move file="${alt.src.dir}/lab/${alt.token.class.old}.java" 
+                  tofile="${alt.src.dir}/lab/${alt.token.class.new}.java" 
+                  failonerror="false"/>
+    
+            <echo message="Код успешно модифицирован. Вызываем цель build..."/>
+    
+            <antcall target="build">
+                <param name="src.dir" value="${alt.src.dir}"/>
+                <param name="classes.dir" value="${alt.classes.dir}"/>
+                <param name="build.dir" value="${alt.build.dir}"/>
+                <param name="jar.name" value="${alt.jar.name}"/>
+            </antcall>
+    
+            <echo message="Альтернативная сборка завершена: ${alt.build.dir}/${alt.jar.name}"/>
+        </target>
 
     <target name="report" description="Отчет junit, добавление в git и commit">
         <echo message="Здесь будет таск 'junitreport' и 'exec' для git..." />
