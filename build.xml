@@ -120,11 +120,55 @@
             <antcall target="build" />
         </target>
 
-    <target name="scp" depends="build" description="Перемещение проекта по scp">
-        <echo
-            message="Здесь будет таск 'scp' с использованием библиотеки JSch..."
+        <target
+        name="scp"
+        depends="build"
+        description="Перемещение проекта по scp на сервер"
+    >
+                <echo message="Подготовка к деплою..." />
+
+                <input
+            message="Введите пароль от сервера ${scp.host}: "
+            addproperty="scp.password"
+        >
+                    <handler
+                classname="org.apache.tools.ant.input.SecureInputHandler"
+            />
+                </input>
+
+                <echo
+            message="Запуск изолированного процесс для отправки..."
         />
-    </target>
+
+                <exec executable="ant" failonerror="true">
+                    <arg value="-logger" />
+                    <arg
+                value="org.apache.tools.ant.listener.AnsiColorLogger"
+            />
+                    <arg value="-lib" />
+                    <arg value="lib" /> <arg
+                value="-Dscp.password=${scp.password}"
+            /> <arg value="internal-scp" /> </exec>
+            </target>
+
+            <target name="internal-scp">
+                <taskdef
+            name="scp"
+            classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp"
+            classpathref="classpath"
+        />
+
+                <scp
+            file="${build.dir}/${jar.name}"
+            todir="${scp.user}:${scp.password}@${scp.host}:${scp.dir}"
+            port="${scp.port}"
+            trust="true"
+        />
+
+                <echo
+            message="✅ Архив ${jar.name} успешно загружен на сервер в директорию ${scp.dir}!"
+        />
+            </target>
 
     <target
         name="native2ascii"

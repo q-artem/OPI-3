@@ -11,6 +11,10 @@ dependencies {
     implementation("org.primefaces:primefaces:13.0.0")
     implementation("org.postgresql:postgresql:42.7.8")
     testImplementation("junit:junit:4.13.2")
+    compileOnly("com.jcraft:jsch:0.1.55")
+    compileOnly("org.apache.ant:ant-jsch:1.10.14") {
+        isTransitive = false
+    }
 }
 
 java {
