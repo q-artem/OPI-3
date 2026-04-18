@@ -254,11 +254,58 @@
                 <echo message="Шаг с отчетом завершен" />
             </target>
 
-    <target name="diff" description="Проверка рабочей копии и svn commit">
-        <echo
-            message="Здесь будет таск 'exec' для svn status и svn commit..."
-        />
-    </target>
+            <target name="diff" description="Проверка рабочей копии и SVN commit">
+                    <echo message="Проверяем статус SVN..."/>
+            
+                    <exec executable="svn" outputproperty="svn.status.output" failifexecutionfails="false">
+                        <arg value="status"/>
+                    </exec>
+            
+                    <echo message="Текущие изменения в рабочей копии SVN:${line.separator}${svn.status.output}"/>
+            
+                    <condition property="forbidden.changed">
+                        <matches string="${svn.status.output}" pattern="${diff.forbidden.classes}"/>
+                    </condition>
+            
+                    <condition property="has.changes">
+                        <length string="${svn.status.output}" when="greater" length="0" trim="true"/>
+                    </condition>
+            
+                    <antcall target="-diff-fail"/>
+                    <antcall target="-diff-commit"/>
+                </target>
+            
+                <target name="-diff-fail" if="forbidden.changed">
+                    <echo message="ВНИМАНИЕ: Обнаружены изменения в критических классах (${diff.forbidden.classes})!"/>
+                    <echo message="Автоматический SVN commit отменен в целях безопасности."/>
+                </target>
+            
+                <target name="-diff-commit" if="has.changes" unless="forbidden.changed">
+                    <echo message="Критические классы не затронуты. Подготовка к коммиту..."/>
+                    
+                    <input message="Введите пароль SVN для пользователя ${svn.user}: " addproperty="svn.password">
+                        <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
+                    </input>
+            
+                    <exec executable="svn" failonerror="true">
+                        <arg value="add"/>
+                        <arg value="--force"/>
+                        <arg value="."/>
+                    </exec>
+                    
+                    <exec executable="svn" failonerror="true">
+                        <arg value="commit"/>
+                        <arg value="-m"/>
+                        <arg value="Auto-commit: Safe changes (diff check passed) [Ant Build]"/>
+                        <arg value="--username"/>
+                        <arg value="${svn.user}"/>
+                        <arg value="--password"/>
+                        <arg value="${svn.password}"/>
+                        <arg value="--non-interactive"/>
+                    </exec>
+                    
+                    <echo message="Изменения успешно отправлены в SVN!"/>
+                </target>
 
     <target name="history" description="Откат git при неудачной компиляции">
         <echo
