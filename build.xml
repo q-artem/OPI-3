@@ -31,7 +31,7 @@
 
     <target
         name="build"
-        depends="compile"
+        depends="compile, native2ascii"
         description="Упаковка кода в jar-архив"
     >
         <jar destfile="${build.dir}/${jar.name}" basedir="${classes.dir}">
@@ -61,14 +61,18 @@
 
     <target
         name="music"
-        description="Воспроизведение музыки по завершению сборки"
+        description="Воспроизведение музыки по завершении сборки"
     >
-        <sound>
-            <success source="${basedir}/success.wav" />
-            <fail source="${basedir}/fail.wav" />
-        </sound>
-        <echo message="Музыка отыграла." />
-    </target>
+            <sound>
+                <success source="${sound.dir}/${sound.success}" loops="0" />
+                <fail source="${sound.dir}/${sound.fail}" loops="0" />
+            </sound>
+            <echo
+            message="Звуки зарегистрированы! Запускаем процесс сборки..."
+        />
+
+            <antcall target="build" />
+        </target>
 
     <target name="scp" depends="build" description="Перемещение проекта по scp">
         <echo
@@ -76,10 +80,22 @@
         />
     </target>
 
-    <target name="native2ascii" description="Преобразование native2ascii">
-        <echo
-            message="Здесь будет таск 'native2ascii' для .properties файлов..."
+    <target
+        name="native2ascii"
+        description="Преобразование native2ascii для файлов локализации"
+    >
+            <echo message="Запуск native2ascii для файлов локализации..." />
+
+            <mkdir dir="${classes.dir}" />
+
+            <native2ascii
+            src="${resources.dir}"
+            dest="${classes.dir}"
+            includes="**/*.properties"
+            encoding="UTF-8"
         />
+
+            <echo message="Конвертация native2ascii завершена." />
     </target>
 
     <target name="alt" description="Альтернативная версия программы (replace)">
