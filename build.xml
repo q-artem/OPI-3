@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="Lab3_Ant" default="build" basedir=".">
+
+    <property file="build.properties" />
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="*.jar" />
+    </path>
+
+    <target
+        name="clean"
+        description="Удаление скомпилированных классов и временных файлов"
+    >
+        <delete dir="${build.dir}" />
+        <delete dir="${alt.build.dir}" />
+        <echo message="Очистка завершена." />
+    </target>
+
+    <target name="compile" description="Компиляция исходных кодов проекта">
+        <mkdir dir="${classes.dir}" />
+        <javac
+            srcdir="${src.dir}"
+            destdir="${classes.dir}"
+            includeantruntime="false"
+            encoding="UTF-8"
+            classpathref="classpath"
+        >
+        </javac>
+        <echo message="Компиляция успешно завершена." />
+    </target>
+
+    <target
+        name="build"
+        depends="compile"
+        description="Упаковка кода в jar-архив"
+    >
+        <jar destfile="${build.dir}/${jar.name}" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Manifest-Version" value="1.0" />
+                <attribute name="Implementation-Version" value="${version}" />
+                <attribute name="Main-Class" value="${main.class}" />
+            </manifest>
+        </jar>
+        <echo message="Архив ${jar.name} успешно собран." />
+    </target>
+
+    <target name="test" depends="build" description="Запуск junit-тестов">
+        <echo message="Здесь будет таск 'junit' для запуска тестов..." />
+    </target>
+
+    <target name="xml" description="Валидация всех xml-файлов в проекте">
+        <xmlvalidate failonerror="false" lenient="yes">
+            <fileset
+                dir="${basedir}"
+                includes="**/*.xml"
+                excludes="node_modules/**, .idea/**, build/**"
+            />
+        </xmlvalidate>
+        <echo message="Валидация XML завершена." />
+    </target>
+
+    <target
+        name="music"
+        description="Воспроизведение музыки по завершению сборки"
+    >
+        <sound>
+            <success source="${basedir}/success.wav" />
+            <fail source="${basedir}/fail.wav" />
+        </sound>
+        <echo message="Музыка отыграла." />
+    </target>
+
+    <target name="scp" depends="build" description="Перемещение проекта по scp">
+        <echo
+            message="Здесь будет таск 'scp' с использованием библиотеки JSch..."
+        />
+    </target>
+
+    <target name="native2ascii" description="Преобразование native2ascii">
+        <echo
+            message="Здесь будет таск 'native2ascii' для .properties файлов..."
+        />
+    </target>
+
+    <target name="alt" description="Альтернативная версия программы (replace)">
+        <echo
+            message="Здесь будет копирование в tmp, таск 'replace' и упаковка..."
+        />
+    </target>
+
+    <target name="report" description="Отчет junit, добавление в git и commit">
+        <echo message="Здесь будет таск 'junitreport' и 'exec' для git..." />
+    </target>
+
+    <target name="diff" description="Проверка рабочей копии и svn commit">
+        <echo
+            message="Здесь будет таск 'exec' для svn status и svn commit..."
+        />
+    </target>
+
+    <target name="history" description="Откат git при неудачной компиляции">
+        <echo
+            message="Здесь будет сложный алгоритм с циклом и git checkout..."
+        />
+    </target>
+
+</project>
