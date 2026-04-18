@@ -207,9 +207,7 @@
                     <arg value="Auto-commit: JUnit XML reports [Ant Build]" />
                 </exec>
 
-                <echo
-            message="Шаг с отчетами завершен"
-        />
+                <echo message="Шаг с отчетом завершен" />
             </target>
 
     <target name="diff" description="Проверка рабочей копии и svn commit">
