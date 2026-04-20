@@ -4,10 +4,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-/**
- * Unit-тесты для класса Result.
- * Проверяют конструктор, геттеры и сеттеры.
- */
 public class ResultTest {
 
     @Test

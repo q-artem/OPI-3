@@ -1,11 +1,11 @@
-arguments=--init-script /home/roflex/.local/share/zed/extensions/work/java/jdtls/jdt-language-server-1.58.0-202604151538/configuration/org.eclipse.osgi/58/0/.cp/gradle/init/init.gradle
+arguments=--init-script /var/folders/4y/ckl14s7s4lb6ckwvlm0yh6k40000gn/T/db3b08fc4a9ef609cb16b96b200fa13e563f396e9bb1ed0905fdab7bc3bc513b.gradle
 auto.sync=false
 build.scans.enabled=false
 connection.gradle.distribution=GRADLE_DISTRIBUTION(VERSION(8.9))
 connection.project.dir=
 eclipse.preferences.version=1
 gradle.user.home=
-java.home=/usr/lib/jvm/java-17-openjdk
+java.home=/Users/olegkorepanov/Library/Java/JavaVirtualMachines/corretto-22.0.2/Contents/Home
 jvm.arguments=
 offline.mode=false
 override.workspace.settings=true

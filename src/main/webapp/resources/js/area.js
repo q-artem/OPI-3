@@ -82,14 +82,11 @@ function drawCanvas(r, cp, points) {
   const h = canvas.height
   r *= scale
 
-  // fill bg
   drawRect(0, 0, w, h, colors.surface)
 
-  // draw axis
   drawLine(w / 2, 10, w / 2, h, 5, colors.on_surface)
   drawLine(0, h / 2, w - 10, h / 2, 5, colors.on_surface)
 
-  // draw axis arrows
   drawTriangle(
     w / 2, 0,
     w / 2 - 15, 40,
@@ -103,7 +100,6 @@ function drawCanvas(r, cp, points) {
     colors.on_surface
   )
 
-  // draw axis stripes
   drawLine(
     w / 2 - 10, h / 2 + 10,
     w / 2 + 10, h / 2 - 10,
@@ -114,7 +110,6 @@ function drawCanvas(r, cp, points) {
   for (let i = 1; i <= 5; i++) {
     let j = i * scale
 
-    // y up
     drawLine(
       w / 2 - 10, h / 2 - j,
       w / 2 + 10, h / 2 - j,
@@ -122,7 +117,6 @@ function drawCanvas(r, cp, points) {
     )
     drawText(i, w / 2 + 15, h / 2 + 10 - j, 30)
 
-    // y down
     drawLine(
       w / 2 - 10, h / 2 + j,
       w / 2 + 10, h / 2 + j,
@@ -130,7 +124,6 @@ function drawCanvas(r, cp, points) {
     )
     drawText(-i, w / 2 + 15, h / 2 + 10 + j, 30)
 
-    // x left
     drawLine(
       w / 2 - j, h / 2 + 10,
       w / 2 - j, h / 2 - 10,
@@ -138,7 +131,6 @@ function drawCanvas(r, cp, points) {
     )
     drawText(-i, w / 2 - 10 - j, h / 2 - 25, 30)
 
-    // x right
     drawLine(
       w / 2 + j, h / 2 + 10,
       w / 2 + j, h / 2 - 10,
@@ -147,7 +139,6 @@ function drawCanvas(r, cp, points) {
     drawText(i, w / 2 - 10 + j, h / 2 - 25, 30)
   }
 
-  // draw main area
   drawArc(
     w / 2, h / 2, r,
     0, Math.PI / 2,

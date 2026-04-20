@@ -7,48 +7,30 @@
         <fileset dir="${lib.dir}" includes="*.jar" />
     </path>
 
-    <target
-        name="clean"
-        description="Удаление скомпилированных классов и временных файлов"
-    >
+    <target name="clean" description="Удаление скомпилированных классов и временных файлов">
         <delete dir="${build.dir}" />
         <delete dir="${alt.build.dir}" />
         <echo message="Очистка завершена." />
     </target>
 
     <target name="init-libs" description="Загрузка зависимостей через Gradle">
-            <echo message="Вызов Gradle для скачивания библиотек..." />
+        <echo message="Вызов Gradle для скачивания библиотек..." />
+        <exec executable="gradle" failonerror="true">
+            <arg value="copyLibs" />
+            <arg value="--console=rich" />
+        </exec>
+        <echo message="Библиотеки успешно загружены в папку lib/" />
+    </target>
 
-            <exec executable="gradle" failonerror="true">
-                <arg value="copyLibs" />
-                <arg value="--console=rich" />
-            </exec>
+    <target name="compile" depends="init-libs" description="Компиляция исходных кодов проекта">
+        <mkdir dir="${classes.dir}" />
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false" encoding="UTF-8" release="17">
+            <classpath refid="classpath" />
+        </javac>
+        <echo message="Компиляция успешно завершена." />
+    </target>
 
-            <echo message="Библиотеки успешно загружены в папку lib/" />
-        </target>
-
-    <target
-        name="compile"
-        depends="init-libs"
-        description="Компиляция исходных кодов проекта"
-    >
-            <mkdir dir="${classes.dir}" />
-            <javac
-            srcdir="${src.dir}"
-            destdir="${classes.dir}"
-            includeantruntime="false"
-            encoding="UTF-8"
-        >
-                <classpath refid="classpath" />
-            </javac>
-            <echo message="Компиляция успешно завершена." />
-        </target>
-
-    <target
-        name="build"
-        depends="compile, native2ascii"
-        description="Упаковка кода в jar-архив"
-    >
+    <target name="build" depends="compile" description="Упаковка кода в jar-архив">
         <jar destfile="${build.dir}/${jar.name}" basedir="${classes.dir}">
             <manifest>
                 <attribute name="Manifest-Version" value="1.0" />
@@ -60,313 +42,212 @@
     </target>
 
     <target name="test" depends="build" description="Запуск junit-тестов">
-            <echo message="Компиляция и запуск тестов..." />
-
-            <mkdir dir="${test.classes.dir}" />
-            <mkdir dir="${build.dir}/reports" /> <javac
-            srcdir="${test.dir}"
-            destdir="${test.classes.dir}"
-            includeantruntime="false"
-            encoding="UTF-8"
-        >
-                <classpath>
-                    <path refid="classpath" />
-                    <pathelement location="${classes.dir}" />
-                </classpath>
-             </javac>
-
-            <junit printsummary="yes" haltonfailure="true">
-                <classpath>
-                    <path refid="classpath" />
-                    <pathelement location="${classes.dir}" />
-                    <pathelement location="${test.classes.dir}" />
-                </classpath>
-
-                <formatter type="xml" />
-
-                <batchtest fork="yes" todir="${build.dir}/reports">
-                    <fileset dir="${test.classes.dir}">
-                        <include name="**/*Test.class" />
-                    </fileset>
-                </batchtest>
-            </junit>
-
-            <echo message="Все тесты пройдены успешно!" />
-        </target>
+        <echo message="Компиляция и запуск тестов..." />
+        <mkdir dir="${test.classes.dir}" />
+        <mkdir dir="${build.dir}/reports" />
+        <javac srcdir="${test.dir}" destdir="${test.classes.dir}" includeantruntime="false" encoding="UTF-8" release="17">
+            <classpath>
+                <path refid="classpath" />
+                <pathelement location="${classes.dir}" />
+            </classpath>
+        </javac>
+        <junit printsummary="yes" haltonfailure="true">
+            <classpath>
+                <path refid="classpath" />
+                <pathelement location="${classes.dir}" />
+                <pathelement location="${test.classes.dir}" />
+            </classpath>
+            <formatter type="xml" />
+            <batchtest fork="yes" todir="${build.dir}/reports">
+                <fileset dir="${test.classes.dir}">
+                    <include name="**/*Test.class" />
+                </fileset>
+            </batchtest>
+        </junit>
+        <echo message="Все тесты пройдены успешно!" />
+    </target>
 
     <target name="xml" description="Валидация всех xml-файлов в проекте">
         <xmlvalidate failonerror="false" lenient="yes">
-            <fileset
-                dir="${basedir}"
-                includes="**/*.xml"
-                excludes="node_modules/**, .idea/**, build/**"
-            />
+            <fileset dir="${basedir}" includes="**/*.xml" excludes="node_modules/**, .idea/**, build/**" />
         </xmlvalidate>
         <echo message="Валидация XML завершена." />
     </target>
 
-    <target
-        name="music"
-        description="Воспроизведение музыки по завершении сборки"
-    >
-            <sound>
-                <success source="${sound.dir}/${sound.success}" loops="0" />
-                <fail source="${sound.dir}/${sound.fail}" loops="0" />
-            </sound>
-            <echo
-            message="Звуки зарегистрированы! Запускаем процесс сборки..."
-        />
+    <target name="music" description="Воспроизведение музыки по завершении сборки">
+        <sound>
+            <success source="${sound.dir}/${sound.success}" loops="0" />
+            <fail source="${sound.dir}/${sound.fail}" loops="0" />
+        </sound>
+        <echo message="Звуки зарегистрированы! Запускаем процесс сборки..." />
+        <antcall target="build" />
+    </target>
 
-            <antcall target="build" />
-        </target>
+    <target name="scp" depends="build" description="Перемещение проекта по scp на сервер">
+        <echo message="Подготовка к деплою..." />
+        <input message="Введите пароль от сервера ${scp.host}: " addproperty="scp.password">
+            <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
+        </input>
+        <echo message="Запуск изолированного процесс для отправки..." />
+        <exec executable="ant" failonerror="true">
+            <arg value="-logger" />
+            <arg value="org.apache.tools.ant.listener.AnsiColorLogger" />
+            <arg value="-lib" />
+            <arg value="lib" />
+            <arg value="-Dscp.password=${scp.password}" />
+            <arg value="internal-scp" />
+        </exec>
+    </target>
 
-        <target
-        name="scp"
-        depends="build"
-        description="Перемещение проекта по scp на сервер"
-    >
-                <echo message="Подготовка к деплою..." />
-
-                <input
-            message="Введите пароль от сервера ${scp.host}: "
-            addproperty="scp.password"
-        >
-                    <handler
-                classname="org.apache.tools.ant.input.SecureInputHandler"
-            />
-                </input>
-
-                <echo
-            message="Запуск изолированного процесс для отправки..."
-        />
-
-                <exec executable="ant" failonerror="true">
-                    <arg value="-logger" />
-                    <arg
-                value="org.apache.tools.ant.listener.AnsiColorLogger"
-            />
-                    <arg value="-lib" />
-                    <arg value="lib" /> <arg
-                value="-Dscp.password=${scp.password}"
-            /> <arg value="internal-scp" /> </exec>
-            </target>
-
-            <target name="internal-scp">
-                <taskdef
-            name="scp"
-            classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp"
-            classpathref="classpath"
-        />
-
-                <scp
+    <target name="internal-scp">
+        <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp" classpathref="classpath" />
+        <scp
             file="${build.dir}/${jar.name}"
             todir="${scp.user}:${scp.password}@${scp.host}:${scp.dir}"
             port="${scp.port}"
             trust="true"
         />
-
-                <echo
-            message="✅ Архив ${jar.name} успешно загружен на сервер в директорию ${scp.dir}!"
-        />
-            </target>
-
-    <target
-        name="native2ascii"
-        description="Преобразование native2ascii для файлов локализации"
-    >
-            <echo message="Запуск native2ascii для файлов локализации..." />
-
-            <mkdir dir="${classes.dir}" />
-
-            <native2ascii
-            src="${resources.dir}"
-            dest="${classes.dir}"
-            includes="**/*.properties"
-            encoding="UTF-8"
-        />
-
-            <echo message="Конвертация native2ascii завершена." />
+        <echo message="Архив ${jar.name} успешно загружен на сервер в директорию ${scp.dir}!" />
     </target>
 
     <target name="alt" description="Альтернативная версия программы (replace)">
-            <echo message="Запуск создания альтернативной версии..." />
-
-            <delete dir="${alt.build.dir}" />
-            <mkdir dir="${alt.src.dir}" />
-            <mkdir dir="${alt.classes.dir}" />
-
-            <copy todir="${alt.src.dir}">
-                <fileset dir="${src.dir}" />
-            </copy>
-
-            <replace dir="${alt.src.dir}" includes="**/*.java">
-                <replacefilter
-                token="${alt.token.class.old}"
-                value="${alt.token.class.new}"
-            />
-                <replacefilter
-                token="${alt.token.var.old}"
-                value="${alt.token.var.new}"
-            />
-            </replace>
-
-            <move
+        <echo message="Запуск создания альтернативной версии..." />
+        <delete dir="${alt.build.dir}" />
+        <mkdir dir="${alt.src.dir}" />
+        <mkdir dir="${alt.classes.dir}" />
+        <copy todir="${alt.src.dir}">
+            <fileset dir="${src.dir}" />
+        </copy>
+        <replace dir="${alt.src.dir}" includes="**/*.java">
+            <replacefilter token="${alt.token.class.old}" value="${alt.token.class.new}" />
+            <replacefilter token="${alt.token.var.old}" value="${alt.token.var.new}" />
+        </replace>
+        <move
             file="${alt.src.dir}/lab/${alt.token.class.old}.java"
             tofile="${alt.src.dir}/lab/${alt.token.class.new}.java"
             failonerror="false"
         />
+        <echo message="Код успешно модифицирован. Вызываем цель build..." />
+        <antcall target="build">
+            <param name="src.dir" value="${alt.src.dir}" />
+            <param name="classes.dir" value="${alt.classes.dir}" />
+            <param name="build.dir" value="${alt.build.dir}" />
+            <param name="jar.name" value="${alt.jar.name}" />
+        </antcall>
+        <echo message="Альтернативная сборка завершена: ${alt.build.dir}/${alt.jar.name}" />
+    </target>
 
-            <echo message="Код успешно модифицирован. Вызываем цель build..." />
+    <target name="report" depends="test" description="Отчет junit, добавление в git и commit">
+        <echo message="Сохранение отчетов и создание коммита в Git..." />
+        <exec executable="git" failonerror="true">
+            <arg value="add" />
+            <arg value="-f" />
+            <arg value="${build.dir}/reports/" />
+        </exec>
+        <exec executable="git" failonerror="false">
+            <arg value="commit" />
+            <arg value="-m" />
+            <arg value="Auto-commit: JUnit XML reports [Ant Build]" />
+        </exec>
+        <echo message="Шаг с отчетом завершен" />
+    </target>
 
-            <antcall target="build">
-                <param name="src.dir" value="${alt.src.dir}" />
-                <param name="classes.dir" value="${alt.classes.dir}" />
-                <param name="build.dir" value="${alt.build.dir}" />
-                <param name="jar.name" value="${alt.jar.name}" />
-            </antcall>
+    <target name="diff" description="Проверка рабочей копии и SVN commit">
+        <echo message="Проверяем статус SVN..." />
+        <exec executable="svn" outputproperty="svn.status.output" failifexecutionfails="false">
+            <arg value="status" />
+        </exec>
+        <echo message="Текущие изменения в рабочей копии SVN:${line.separator}${svn.status.output}" />
+        <condition property="forbidden.changed">
+            <matches string="${svn.status.output}" pattern="${diff.forbidden.classes}" />
+        </condition>
+        <condition property="has.changes">
+            <length string="${svn.status.output}" when="greater" length="0" trim="true" />
+        </condition>
+        <antcall target="-diff-fail" />
+        <antcall target="-diff-commit" />
+    </target>
 
-            <echo
-            message="Альтернативная сборка завершена: ${alt.build.dir}/${alt.jar.name}"
-        />
-        </target>
+    <target name="-diff-fail" if="forbidden.changed">
+        <echo message="ВНИМАНИЕ: Обнаружены изменения в критических классах (${diff.forbidden.classes})!" />
+        <echo message="Автоматический SVN commit отменен в целях безопасности." />
+    </target>
 
-        <target
-        name="report"
-        depends="test"
-        description="Отчет junit, добавление в git и commit"
-    >
-                <echo
-            message="Сохранение отчетов и создание коммита в Git..."
-        />
+    <target name="-diff-commit" if="has.changes" unless="forbidden.changed">
+        <echo message="Критические классы не затронуты. Подготовка к коммиту..." />
+        <input message="Введите пароль SVN для пользователя ${svn.user}: " addproperty="svn.password">
+            <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
+        </input>
+        <exec executable="svn" failonerror="true">
+            <arg value="add" />
+            <arg value="--force" />
+            <arg value="." />
+        </exec>
+        <exec executable="svn" failonerror="true">
+            <arg value="commit" />
+            <arg value="-m" />
+            <arg value="Auto-commit: Safe changes (diff check passed) [Ant Build]" />
+            <arg value="--username" />
+            <arg value="${svn.user}" />
+            <arg value="--password" />
+            <arg value="${svn.password}" />
+            <arg value="--non-interactive" />
+        </exec>
+        <echo message="Изменения успешно отправлены в SVN!" />
+    </target>
 
-                <exec executable="git" failonerror="true">
-                    <arg value="add" />
-                    <arg value="-f" />
-                    <arg value="${build.dir}/reports/" />
-                </exec>
+    <target name="history" description="Откат коммитов до успешной компиляции">
+        <echo message="Поиск последнего рабочего коммита..." />
+        <antcall target="-history-loop" />
+    </target>
 
-                <exec executable="git" failonerror="false">
-                    <arg value="commit" />
-                    <arg value="-m" />
-                    <arg value="Auto-commit: JUnit XML reports [Ant Build]" />
-                </exec>
+    <target name="-history-loop">
+        <echo message="Пробуем скомпилировать текущую версию..." />
+        <exec executable="ant" resultproperty="compile.result" failonerror="false">
+            <arg value="-logger" />
+            <arg value="org.apache.tools.ant.listener.AnsiColorLogger" />
+            <arg value="compile" />
+        </exec>
+        <condition property="compile.success">
+            <equals arg1="${compile.result}" arg2="0" />
+        </condition>
+        <antcall target="-history-success" />
+        <antcall target="-history-fail" />
+    </target>
 
-                <echo message="Шаг с отчетом завершен" />
-            </target>
+    <target name="-history-success" if="compile.success">
+        <echo message="Успех! Код скомпилировался. Мы нашли рабочую версию программы." />
+        <condition property="has.broken.commit">
+            <isset property="broken.hash" />
+        </condition>
+        <antcall target="-generate-diff" />
+    </target>
 
-            <target name="diff" description="Проверка рабочей копии и SVN commit">
-                    <echo message="Проверяем статус SVN..."/>
-            
-                    <exec executable="svn" outputproperty="svn.status.output" failifexecutionfails="false">
-                        <arg value="status"/>
-                    </exec>
-            
-                    <echo message="Текущие изменения в рабочей копии SVN:${line.separator}${svn.status.output}"/>
-            
-                    <condition property="forbidden.changed">
-                        <matches string="${svn.status.output}" pattern="${diff.forbidden.classes}"/>
-                    </condition>
-            
-                    <condition property="has.changes">
-                        <length string="${svn.status.output}" when="greater" length="0" trim="true"/>
-                    </condition>
-            
-                    <antcall target="-diff-fail"/>
-                    <antcall target="-diff-commit"/>
-                </target>
-            
-                <target name="-diff-fail" if="forbidden.changed">
-                    <echo message="ВНИМАНИЕ: Обнаружены изменения в критических классах (${diff.forbidden.classes})!"/>
-                    <echo message="Автоматический SVN commit отменен в целях безопасности."/>
-                </target>
-            
-                <target name="-diff-commit" if="has.changes" unless="forbidden.changed">
-                    <echo message="Критические классы не затронуты. Подготовка к коммиту..."/>
-                    
-                    <input message="Введите пароль SVN для пользователя ${svn.user}: " addproperty="svn.password">
-                        <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
-                    </input>
-            
-                    <exec executable="svn" failonerror="true">
-                        <arg value="add"/>
-                        <arg value="--force"/>
-                        <arg value="."/>
-                    </exec>
-                    
-                    <exec executable="svn" failonerror="true">
-                        <arg value="commit"/>
-                        <arg value="-m"/>
-                        <arg value="Auto-commit: Safe changes (diff check passed) [Ant Build]"/>
-                        <arg value="--username"/>
-                        <arg value="${svn.user}"/>
-                        <arg value="--password"/>
-                        <arg value="${svn.password}"/>
-                        <arg value="--non-interactive"/>
-                    </exec>
-                    
-                    <echo message="Изменения успешно отправлены в SVN!"/>
-                </target>
+    <target name="-generate-diff" if="has.broken.commit">
+        <echo message="Генерируем diff для ревизии, сломавшей сборку (${broken.hash})..." />
+        <exec executable="git" output="${build.dir}/broken_diff.txt" failonerror="true">
+            <arg value="diff" />
+            <arg value="HEAD" />
+            <arg value="${broken.hash}" />
+        </exec>
+        <echo message="Отчет готов! Вы можете посмотреть изменения в файле: ${build.dir}/broken_diff.txt" />
+    </target>
 
-                <target name="history" description="Откат коммитов до успешной компиляции">
-                        <echo message="Поиск последнего рабочего коммита..."/>
-                        <antcall target="-history-loop"/>
-                    </target>
-                
-                    <target name="-history-loop">
-                        <echo message="Пробуем скомпилировать текущую версию..."/>
-                
-                        <exec executable="ant" resultproperty="compile.result" failonerror="false">
-                            <arg value="-logger"/>
-                            <arg value="org.apache.tools.ant.listener.AnsiColorLogger"/>
-                            <arg value="compile"/>
-                        </exec>
-                
-                        <condition property="compile.success">
-                            <equals arg1="${compile.result}" arg2="0"/>
-                        </condition>
-                
-                        <antcall target="-history-success"/>
-                        <antcall target="-history-fail"/>
-                    </target>
-                
-                    <target name="-history-success" if="compile.success">
-                        <echo message="Успех! Код скомпилировался. Мы нашли рабочую версию программы."/>
-                        
-                        <condition property="has.broken.commit">
-                            <isset property="broken.hash"/>
-                        </condition>
-                        <antcall target="-generate-diff"/>
-                    </target>
-                
-                    <target name="-generate-diff" if="has.broken.commit">
-                        <echo message="Генерируем diff для ревизии, сломавшей сборку (${broken.hash})..."/>
-                        
-                        <exec executable="git" output="${build.dir}/broken_diff.txt" failonerror="true">
-                            <arg value="diff"/>
-                            <arg value="HEAD"/> <arg value="${broken.hash}"/> </exec>
-                
-                        <echo message="Отчет готов! Вы можете посмотреть изменения в файле: ${build.dir}/broken_diff.txt"/>
-                    </target>
-                
-                    <target name="-history-fail" unless="compile.success">
-                        <echo message="Ошибка компиляции. Запоминаем текущий хэш и откатываемся..."/>
-                
-                        <exec executable="git" outputproperty="current.hash" failonerror="true">
-                            <arg value="rev-parse"/>
-                            <arg value="HEAD"/>
-                        </exec>
-                
-                        <exec executable="git" failonerror="true">
-                            <arg value="reset"/>
-                            <arg value="--hard"/>
-                            <arg value="HEAD~1"/>
-                        </exec>
-                
-                        <echo message="Состояние откачено. Идем на следующий круг рекурсии..."/>
-                        
-                        <antcall target="-history-loop" inheritall="false">
-                            <param name="broken.hash" value="${current.hash}"/>
-                        </antcall>
-                    </target>
+    <target name="-history-fail" unless="compile.success">
+        <echo message="Ошибка компиляции. Запоминаем текущий хэш и откатываемся..." />
+        <exec executable="git" outputproperty="current.hash" failonerror="true">
+            <arg value="rev-parse" />
+            <arg value="HEAD" />
+        </exec>
+        <exec executable="git" failonerror="true">
+            <arg value="reset" />
+            <arg value="--hard" />
+            <arg value="HEAD~1" />
+        </exec>
+        <echo message="Состояние откачено. Идем на следующий круг рекурсии..." />
+        <antcall target="-history-loop" inheritall="false">
+            <param name="broken.hash" value="${current.hash}" />
+        </antcall>
+    </target>
 
 </project>

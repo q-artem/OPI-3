@@ -1,17 +1,10 @@
 package lab;
 
+import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
-/**
- * Unit-тесты для AreaBean.checkHit().
- * Проверяем три области попадания:
- *   — прямоугольник во II четверти (x<=0, y>=0, x+r>=y)
- *   — прямоугольник в III четверти (x<=0, y<=0, x>=-r/2, y>=-r)
- *   — четверть круга в IV четверти (x>=0, y<=0, x²+y²<=r²)
- */
 public class AreaBeanTest {
 
     private AreaBean bean;
@@ -27,7 +20,10 @@ public class AreaBeanTest {
     public void quadrantII_insideRectangle() {
         bean.setX(-1);
         bean.setY(0.5);
-        assertTrue("Точка должна быть внутри прямоугольника Q2", bean.checkHit(2.0));
+        assertTrue(
+            "Точка должна быть внутри прямоугольника Q2",
+            bean.checkHit(2.0)
+        );
     }
 
     @Test
@@ -103,6 +99,9 @@ public class AreaBeanTest {
     public void zeroRadius_originIsHit() {
         bean.setX(0);
         bean.setY(0.0);
-        assertTrue("При r=0 начало координат входит в Q2-прямоугольник (x+r=y=0)", bean.checkHit(0.0));
+        assertTrue(
+            "При r=0 начало координат входит в Q2-прямоугольник (x+r=y=0)",
+            bean.checkHit(0.0)
+        );
     }
 }
