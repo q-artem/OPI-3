@@ -24,13 +24,13 @@
 
     <target name="compile" depends="init-libs" description="Компиляция исходных кодов проекта">
         <mkdir dir="${classes.dir}" />
-        <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false" encoding="UTF-8" release="17">
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false" encoding="UTF-8">
             <classpath refid="classpath" />
         </javac>
         <echo message="Компиляция успешно завершена." />
     </target>
 
-    <target name="build" depends="compile" description="Упаковка кода в jar-архив">
+    <target name="build" depends="compile, native2ascii" description="Упаковка кода в jar-архив">
         <jar destfile="${build.dir}/${jar.name}" basedir="${classes.dir}">
             <manifest>
                 <attribute name="Manifest-Version" value="1.0" />
@@ -45,7 +45,7 @@
         <echo message="Компиляция и запуск тестов..." />
         <mkdir dir="${test.classes.dir}" />
         <mkdir dir="${build.dir}/reports" />
-        <javac srcdir="${test.dir}" destdir="${test.classes.dir}" includeantruntime="false" encoding="UTF-8" release="17">
+        <javac srcdir="${test.dir}" destdir="${test.classes.dir}" includeantruntime="false" encoding="UTF-8">
             <classpath>
                 <path refid="classpath" />
                 <pathelement location="${classes.dir}" />
@@ -108,6 +108,21 @@
             trust="true"
         />
         <echo message="Архив ${jar.name} успешно загружен на сервер в директорию ${scp.dir}!" />
+    </target>
+    
+    <target name="native2ascii" description="Преобразование native2ascii для файлов локализации">
+        <echo message="Запуск native2ascii для файлов локализации..." />
+
+        <mkdir dir="${classes.dir}" />
+
+        <native2ascii
+            src="${resources.dir}"
+            dest="${classes.dir}"
+            includes="**/*.properties"
+            encoding="UTF-8"
+        />
+
+        <echo message="Конвертация native2ascii завершена." />
     </target>
 
     <target name="alt" description="Альтернативная версия программы (replace)">
