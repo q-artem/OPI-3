@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="OPI-3" default="build" basedir=".">
+<project name="OPI-3" default="build" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 
     <property file="build.properties" />
 
@@ -13,13 +13,31 @@
         <echo message="Очистка завершена." />
     </target>
 
-    <target name="init-libs" description="Загрузка зависимостей через Gradle">
-        <echo message="Вызов Gradle для скачивания библиотек..." />
-        <exec executable="gradle" failonerror="true">
-            <arg value="copyLibs" />
-            <arg value="--console=rich" />
-        </exec>
-        <echo message="Библиотеки успешно загружены в папку lib/" />
+    <property name="ivy.install.version" value="2.5.2" />
+        <property name="ivy.jar.dir" value="${basedir}/ivy" />
+        <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
+    
+        <target name="download-ivy">
+            <mkdir dir="${ivy.jar.dir}"/>
+            <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+                 dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+    
+    <target name="install-ivy" depends="download-ivy">
+        <path id="ivy.lib.path">
+            <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml"
+                    uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>
+
+    <target name="init-libs" depends="install-ivy" description="Загрузка зависимостей через Ivy">
+        <echo message="Вызов Ivy для скачивания библиотек..."/>
+        <mkdir dir="lib"/>
+        
+        <ivy:retrieve pattern="lib/[artifact]-[revision](-[classifier]).[ext]" sync="true" type="jar,bundle"/>
+        
+        <echo message="Библиотеки успешно загружены в папку lib/"/>
     </target>
 
     <target name="compile" depends="init-libs" description="Компиляция исходных кодов проекта">
