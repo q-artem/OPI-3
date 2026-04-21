@@ -2,106 +2,67 @@ package lab;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class AreaBeanTest {
 
+    private final int x;
+    private final double y;
+    private final double r;
+    private final boolean expected;
+    private final String description;
+
     private AreaBean bean;
+
+    public AreaBeanTest(
+        int x,
+        double y,
+        double r,
+        boolean expected,
+        String description
+    ) {
+        this.x = x;
+        this.y = y;
+        this.r = r;
+        this.expected = expected;
+        this.description = description;
+    }
+
+    @Parameters(name = "{4}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(
+            new Object[][] {
+                { -1, 0.5, 2.0, true, "q2_rectangle" },
+                { 0, 0.0, 1.0, true, "q2_boundary" },
+                { -1, 1.5, 2.0, false, "q2_outside" },
+                { -1, -1.0, 2.0, true, "q3_inside" },
+                { -2, -1.0, 2.0, false, "q3_tooLeft" },
+                { -1, -3.0, 2.0, false, "q3_tooLow" },
+                { 1, -1.0, 2.0, true, "q4_inside" },
+                { 2, 0.0, 2.0, true, "q4_boundary" },
+                { 2, -2.0, 2.0, false, "q4_outside" },
+                { 1, 1.0, 2.0, false, "q1" },
+                { 0, 0.0, 0.0, true, "zeroRadius" },
+            }
+        );
+    }
 
     @Before
     public void setUp() {
         bean = new AreaBean(null);
     }
 
-    // II четверть: прямоугольник
-
     @Test
-    public void quadrantII_insideRectangle() {
-        bean.setX(-1);
-        bean.setY(0.5);
-        assertTrue(
-            "Точка должна быть внутри прямоугольника Q2",
-            bean.checkHit(2.0)
-        );
-    }
-
-    @Test
-    public void quadrantII_onBoundary() {
-        bean.setX(0);
-        bean.setY(0);
-        assertTrue("Угол прямоугольника Q2", bean.checkHit(1.0));
-    }
-
-    @Test
-    public void quadrantII_outsideBecauseYTooHigh() {
-        bean.setX(-1);
-        bean.setY(1.5);
-        assertFalse("y > x+r — вне прямоугольника Q2", bean.checkHit(2.0));
-    }
-
-    // III четверть: прямоугольник
-
-    @Test
-    public void quadrantIII_insideRectangle() {
-        bean.setX(-1);
-        bean.setY(-1.0);
-        assertTrue("Точка внутри прямоугольника Q3", bean.checkHit(2.0));
-    }
-
-    @Test
-    public void quadrantIII_outsideBecauseXTooLeft() {
-        bean.setX(-2);
-        bean.setY(-1.0);
-        assertFalse("x < -r/2 — вне прямоугольника Q3", bean.checkHit(2.0));
-    }
-
-    @Test
-    public void quadrantIII_outsideBecauseYTooLow() {
-        bean.setX(-1);
-        bean.setY(-3.0);
-        assertFalse("y < -r — вне прямоугольника Q3", bean.checkHit(2.0));
-    }
-
-    // IV четверть: четверть круга
-
-    @Test
-    public void quadrantIV_insideCircle() {
-        bean.setX(1);
-        bean.setY(-1.0);
-        assertTrue("Точка внутри четверти круга Q4", bean.checkHit(2.0));
-    }
-
-    @Test
-    public void quadrantIV_onCircleBoundary() {
-        bean.setX(2);
-        bean.setY(0.0);
-        assertTrue("Точка на границе круга Q4", bean.checkHit(2.0));
-    }
-
-    @Test
-    public void quadrantIV_outsideCircle() {
-        bean.setX(2);
-        bean.setY(-2.0);
-        assertFalse("Точка вне круга Q4 (x²+y² > r²)", bean.checkHit(2.0));
-    }
-
-    // I четверть: не входит ни в одну область
-
-    @Test
-    public void quadrantI_alwaysMiss() {
-        bean.setX(1);
-        bean.setY(1.0);
-        assertFalse("Точка в Q1 — вне всех областей", bean.checkHit(2.0));
-    }
-
-    @Test
-    public void zeroRadius_originIsHit() {
-        bean.setX(0);
-        bean.setY(0.0);
-        assertTrue(
-            "При r=0 начало координат входит в Q2-прямоугольник (x+r=y=0)",
-            bean.checkHit(0.0)
-        );
+    public void checkHit_returnsExpected() {
+        bean.setX(x);
+        bean.setY(y);
+        assertEquals(description, expected, bean.checkHit(r));
     }
 }
